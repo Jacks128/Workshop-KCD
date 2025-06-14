@@ -12,7 +12,7 @@ app.get('/version', (req, res) => {
 
 app.get('/greet/:name', (req, res) => {   
     console.log(`Let's greet ${req.params.name}!`); 
-    res.send(`Hello ${req.params.name}!`);
+    res.send(`Hello everyone, specially you ${req.params.name}!`);
 });
 
 app.get('/sayGoodbye/:name', (req, res) => {   
