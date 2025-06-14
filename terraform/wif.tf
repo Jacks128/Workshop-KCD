@@ -16,7 +16,7 @@ resource "google_iam_workload_identity_pool_provider" "github_wif_provider_01" {
   }
 
   oidc {
-    issuer_uri = "https://token.actions.githubcontent.com"
+    issuer_uri = "https://token.actions.githubusercontent.com"
   }
 }
 
