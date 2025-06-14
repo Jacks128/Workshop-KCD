@@ -1,0 +1,43 @@
+# Plan infrastructure resources from GCP
+name: Plan IaC
+on:
+  push:
+    tags: ['tf-plan.v*']
+env:
+  PROJECT_ID: winged-vigil-462906-c7
+jobs:
+  terraform-plan:
+    name: "Perform Terraform Plan"
+    runs-on: [ubuntu-latest]
+    defaults:
+      run:
+        working-directory: ./terraform
+    permissions:
+      contents: 'write'
+      pull-requests: 'write'
+      id-token: 'write'
+    steps:
+      # Check out your GitHub repo into the container executing these steps
+      - name: Checkout IaC Repository
+        uses: actions/checkout@v4
+
+      # Authenticate to the GCP using WIF
+      - name: Authenticate to GCP using WIF
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{secrets.WORKLOAD_IDENTITY_PROVIDER_GCP}}
+          service_account:  'terraform-sa@${{env.PROJECT_ID}}.iam.gserviceaccount.com'
+          project_id:  ${{env.PROJECT_ID}}
+          token_format: 'access_token'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan

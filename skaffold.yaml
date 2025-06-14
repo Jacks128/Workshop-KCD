@@ -1,0 +1,23 @@
+apiVersion: skaffold/v2beta16
+kind: Config
+metadata:
+  name: full-stack
+build:
+  artifacts:
+  - image: cicd-sample
+    context: ./
+deploy:
+  kustomize:
+    paths:
+    - k8s/dev/
+profiles:
+- name: staging
+  deploy:
+    kustomize:
+      paths:
+      - k8s/staging/
+- name: production
+  deploy:
+    kustomize:
+      paths:
+      - k8s/production/      

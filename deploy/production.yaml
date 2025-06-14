@@ -1,0 +1,16 @@
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: production
+  annotations: {}
+  labels: {}
+description: production
+requireApproval: true
+gke:
+  cluster: projects/winged-vigil-462906-c7/locations/us-central1/clusters/production
+executionConfigs:
+- defaultPool:
+    serviceAccount: cicd-sa@winged-vigil-462906-c7.iam.gserviceaccount.com
+  usages:
+  - RENDER
+  - DEPLOY  

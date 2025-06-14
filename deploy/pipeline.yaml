@@ -1,0 +1,15 @@
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: cicd-ga-sample-pipeline
+  labels:
+    app: cicd-ga-sample-pipeline
+description: ccicd-ga-sample-pipeline
+serialPipeline:
+  stages:
+  - targetId: staging
+    profiles:
+    - staging
+  - targetId: production
+    profiles:
+    - production    

@@ -1,0 +1,15 @@
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: staging
+  annotations: {}
+  labels: {}
+description: staging
+gke:
+  cluster: projects/winged-vigil-462906-c7/locations/us-central1/clusters/staging
+executionConfigs:
+- defaultPool:
+    serviceAccount: cicd-sa@winged-vigil-462906-c7.iam.gserviceaccount.com
+  usages:
+  - RENDER
+  - DEPLOY
