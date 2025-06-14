@@ -1,0 +1,63 @@
+name: Cloud Deploy
+on:
+  push:
+    tags: ['app.v*']
+
+env: 
+  REGION: us-central1
+  PROJECT_ID: winged-vigil-462906-c7
+  
+jobs:
+  cloud-deploy-st:
+    name: Deploy to Staging
+    runs-on: [ubuntu-latest]
+    permissions:
+      contents: 'write'
+      pull-requests: 'write'
+      id-token: 'write'
+    steps:
+      # Check out your GitHub repo into the container executing these steps
+      - name: "Cloning repo"
+        uses: actions/checkout@v4
+      # Authenticate to the Google Cloud platform using Workload Identity Federation, the most secure and preferred
+      # way to connect to our Google Cloud Platform from GitHub.
+      - name: Authenticate to GCP using WIF
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{secrets.WORKLOAD_IDENTITY_PROVIDER_GCP_CICD}}
+          service_account:  'cicd-sa@${{env.PROJECT_ID}}.iam.gserviceaccount.com'
+          project_id:  ${{env.PROJECT_ID}}
+          token_format: 'access_token'    
+      # The GCloud CLI must be installed and configured in the container to enable subsequent steps
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{env.PROJECT_ID}}
+          install_components: 'skaffold'
+      # Configure docker authorization for access to the Google Artifact Registry
+      - name: Configure Docker
+        run: |-
+          gcloud --quiet auth configure-docker $REGION-docker.pkg.dev      
+          
+      # Build your application image following the specified profile as defined in your skaffold.yaml file
+      - name: Skaffold build
+        run: |-
+          skaffold build --file-output=/home/runner/artifacts.json \
+                         --default-repo=$REGION-docker.pkg.dev/$PROJECT_ID/cicd-artifacts \
+                         --push=true \
+                         --filename='skaffold.yaml'
+      # Set up Cloud Deploy
+      - name: Create or update Cloud Deploy Pipeline
+        run: |-
+          gcloud deploy apply --file deploy/pipeline.yaml --region $REGION --project $PROJECT_ID
+          gcloud deploy apply --file deploy/staging.yaml --region $REGION --project $PROJECT_ID
+          gcloud deploy apply --file deploy/production.yaml --region $REGION --project $PROJECT_ID
+      # Initiate deployment following the pipeline definition from your clouddeploy.yaml file
+      - name: Create release
+        run: |-
+          gcloud deploy releases create rel-$GITHUB_SHA \
+            --delivery-pipeline cicd-ga-sample-pipeline \
+            --description "$(git log -1  --pretty='%s')" \
+            --region=$REGION \
+            --build-artifacts /home/runner/artifacts.json \
+            --annotations "commit_ui=https://source.cloud.google.com/$PROJECT_ID/cicd-sample/+/$GITHUB_SHA" \
