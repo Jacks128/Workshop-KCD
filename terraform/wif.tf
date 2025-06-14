@@ -15,6 +15,8 @@ resource "google_iam_workload_identity_pool_provider" "github_wif_provider_01" {
     "attribute.repository" = "assertion.repository"
   }
 
+  attribute_condition = "attribute.repository == 'Jacks128/Workshop-KCD'"
+
   oidc {
     issuer_uri = "https://token.actions.githubusercontent.com"
   }
